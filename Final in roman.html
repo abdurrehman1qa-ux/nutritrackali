@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f6e56">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="NutriTrack">
+<link rel="manifest" id="pwa-manifest">
+<title>NutriTrack – Nutrition & Fitness</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --border: #e0ddd5;
+    --text: #2c2c2a;
+    --text-secondary: #6f6e6a;
+    --text-tertiary: #a8a69e;
+    --accent: #0f6e56;
+    --accent-light: #e1f5ee;
+    --danger: #a32d2d;
+    --danger-light: #fcebeb;
+    --warning: #854f0b;
+    --warning-light: #faeeda;
+    --info: #185fa5;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 70px;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 1rem; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  h2 { font-size: 17px; font-weight: 500; margin-bottom: 0.75rem; }
+  h3 { font-size: 15px; font-weight: 500; }
+  .subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 1rem; }
+  .card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .metric-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
+    text-align: center;
+  }
+  .metric-card .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .metric-card .value { font-size: 22px; font-weight: 500; }
+  .metric-card .unit { font-size: 12px; color: var(--text-tertiary); }
+
+  label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; margin-top: 0.75rem; }
+  input, select, button {
+    width: 100%;
+    height: 38px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--card);
+    color: var(--text);
+    font-size: 15px;
+    padding: 0 10px;
+    font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; box-shadow: 0 0 0 2px var(--accent-light); border-color: var(--accent); }
+  button {
+    cursor: pointer;
+    border: 0.5px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+    margin-top: 1rem;
+  }
+  button:active { transform: scale(0.98); }
+  button.secondary {
+    background: var(--card);
+    color: var(--text);
+    border: 0.5px solid var(--border);
+  }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .row-add { display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px; align-items: end; }
+  .row-add button { margin-top: 0; height: 38px; padding: 0 12px; }
+
+  .meal-section { margin-bottom: 1rem; }
+  .meal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; font-weight: 500; padding: 4px 0; margin-bottom: 4px;
+  }
+  .meal-total { color: var(--text-secondary); font-weight: 400; font-size: 13px; }
+  .food-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px;
+  }
+  .food-item:last-child { border-bottom: none; }
+  .food-item .name { flex: 1; }
+  .food-item .qty { color: var(--text-secondary); margin-left: 4px; }
+  .food-item .macros { color: var(--text-secondary); font-size: 12px; margin-right: 8px; text-align: right; min-width: 90px; }
+  .remove-btn {
+    width: 24px; height: 24px; border: none; background: transparent; color: var(--text-tertiary);
+    display: flex; align-items: center; justify-content: center; padding: 0; margin: 0;
+  }
+  .empty { font-size: 13px; color: var(--text-tertiary); text-align: center; padding: 0.75rem 0; }
+
+  .alert {
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 13px;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .alert.warning { background: var(--warning-light); color: var(--warning); }
+  .alert.success { background: var(--accent-light); color: var(--accent); }
+
+  .tabs {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card); border-top: 0.5px solid var(--border);
+    display: flex; justify-content: center; z-index: 10;
+  }
+  .tabs-inner { max-width: 480px; width: 100%; display: flex; }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: var(--text-tertiary);
+    border: none; background: transparent; border-radius: 0; height: auto; margin: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .tab.active { color: var(--accent); }
+  .tab i { font-size: 20px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .day-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .day-nav button { width: 38px; height: 38px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
+  .day-nav .date-label { font-weight: 500; font-size: 15px; text-align: center; flex: 1; }
+
+  .progress-bar-track {
+    height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-top: 6px;
+  }
+  .progress-bar-fill { height: 100%; border-radius: 4px; }
+
+  .badge {
+    display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-md);
+  }
+  .badge.under { background: var(--accent-light); color: var(--accent); }
+  .badge.over { background: var(--danger-light); color: var(--danger); }
+  .badge.normal { background: var(--accent-light); color: var(--accent); }
+
+  table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  table th, table td { text-align: right; padding: 6px 4px; border-bottom: 0.5px solid var(--border); }
+  table th:first-child, table td:first-child { text-align: left; }
+  table th { color: var(--text-secondary); font-weight: 400; }
+
+  .weight-log-row { display: flex; gap: 8px; align-items: end; margin-bottom: 0.5rem; }
+  .weight-log-row input { flex: 1; }
+  .weight-log-row button { flex: 0 0 auto; width: 70px; margin: 0; height: 38px; }
+
+  .icon-row { display: flex; align-items: center; gap: 6px; }
+
+  /* Water tracker */
+  .water-glasses { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .glass-btn {
+    width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border);
+    background: transparent; color: var(--text-tertiary); font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0; padding: 0; cursor: pointer; transition: all 0.2s;
+    flex: 0 0 auto; width: 40px; height: 40px;
+  }
+  .glass-btn.filled { background: #e0f2fe; border-color: #0ea5e9; color: #0369a1; }
+  .water-summary { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+
+  /* Walk carry-over badge */
+  .carry-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #fef3c7; color: #92400e;
+    border-radius: 6px; font-size: 12px; padding: 3px 8px; margin-top: 6px;
+  }
+
+  /* Alarm / reminder */
+  .alarm-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .alarm-row input[type="time"] { flex: 1; }
+  .alarm-row select { flex: 1; }
+  .alarm-row button { flex: 0 0 auto; width: 80px; margin: 0; height: 38px; }
+  .alarm-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px;
+  }
+  .alarm-item:last-child { border-bottom: none; }
+  .alarm-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+    display: inline-block; margin-right: 6px;
+  }
+  .alarm-dot.off { background: var(--text-tertiary); }
+  .alarm-toggle {
+    width: 44px; height: 26px; border-radius: 13px; border: none;
+    background: var(--border); position: relative; cursor: pointer;
+    margin: 0; padding: 0; transition: background 0.2s;
+  }
+  .alarm-toggle.on { background: var(--accent); }
+  .alarm-toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    transition: transform 0.2s;
+  }
+  .alarm-toggle.on::after { transform: translateX(18px); }
+
+  /* Install banner */
+  #install-banner {
+    display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--accent); color: #fff; padding: 10px 16px;
+    align-items: center; justify-content: space-between; font-size: 14px; gap: 8px;
+  }
+  #install-banner button {
+    background: #fff; color: var(--accent); border: none;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px;
+    font-weight: 600; cursor: pointer; width: auto; height: auto; margin: 0;
+  }
+  #install-banner .close-banner {
+    background: transparent; color: #fff; border: none;
+    font-size: 20px; padding: 0; width: 24px; height: 24px; margin: 0;
+  }
+
+  /* Notification bell animation */
+  @keyframes bell-ring { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-15deg)} 40%{transform:rotate(15deg)} 60%{transform:rotate(-10deg)} 80%{transform:rotate(10deg)} }
+  .bell-ring { animation: bell-ring 0.6s ease; }
+</style>
+</head>
+<body>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <span>📲 Install NutriTrack on your phone</span>
+  <button id="install-btn">Install</button>
+  <button class="close-banner" id="close-banner-btn">✕</button>
+</div>
+
+<div class="container" id="main-container">
+
+  <!-- ===================== ONBOARDING / PROFILE PAGE ===================== -->
+  <div class="page" id="page-profile">
+    <h1>Your profile</h1>
+    <p class="subtitle">This stays on your device. Used to calculate your calorie target and goals.</p>
+
+    <div class="card">
+      <label for="p-age">Age (years)</label>
+      <input type="number" id="p-age" min="10" max="100" placeholder="e.g. 28">
+
+      <label for="p-gender">Gender</label>
+      <select id="p-gender">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <label for="p-height">Height (cm)</label>
+      <input type="number" id="p-height" min="100" max="250" placeholder="e.g. 170">
+
+      <label for="p-weight">Current weight (kg)</label>
+      <input type="number" id="p-weight" min="20" max="300" step="0.1" placeholder="e.g. 70">
+
+      <label for="p-goal">Goal</label>
+      <select id="p-goal">
+        <option value="lose">Lose weight</option>
+        <option value="maintain">Maintain</option>
+        <option value="gain">Gain weight</option>
+      </select>
+
+      <label for="p-target-weight">Target weight (kg)</label>
+      <input type="number" id="p-target-weight" min="20" max="300" step="0.1" placeholder="e.g. 65">
+
+      <label for="p-target-date">Target date</label>
+      <input type="date" id="p-target-date">
+
+      <button id="save-profile-btn">Save profile</button>
+    </div>
+  </div>
+
+  <!-- ===================== DASHBOARD PAGE ===================== -->
+  <div class="page" id="page-dashboard">
+    <h1>Today's dashboard</h1>
+    <p class="subtitle" id="dash-date-label"></p>
+
+    <div id="dash-alert"></div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="label">Calories eaten</div>
+        <div class="value" id="dash-cal-eaten">0</div>
+        <div class="unit">kcal</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Target</div>
+        <div class="value" id="dash-cal-target">0</div>
+        <div class="unit">kcal</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Remaining</div>
+        <div class="value" id="dash-cal-remaining">0</div>
+        <div class="unit">kcal</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Walk goal</div>
+        <div class="value" id="dash-walk-goal">0</div>
+        <div class="unit">minutes</div>
+        <div id="dash-carry-badge"></div>
+      </div>
+    </div>
+
+    <!-- Water quick-log on dashboard -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3>Water today 💧</h3>
+        <span id="dash-water-label" style="font-size:13px;color:var(--text-secondary);"></span>
+      </div>
+      <div class="water-glasses" id="dash-water-glasses"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Calories progress</h3>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="dash-progress-fill" style="width:0%; background: var(--accent);"></div>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;" id="dash-progress-label"></p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Macros today</h3>
+      <table>
+        <tr><th></th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr>
+        <tr><td>Total</td><td id="dash-carb">0</td><td id="dash-prot">0</td><td id="dash-fat">0</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Weight progress</h3>
+      <table>
+        <tr><td>Current weight</td><td id="dash-cur-weight">-</td></tr>
+        <tr><td>Target weight</td><td id="dash-target-weight">-</td></tr>
+        <tr><td>BMI</td><td id="dash-bmi">-</td></tr>
+        <tr><td>Healthy weight range</td><td id="dash-healthy-range">-</td></tr>
+      </table>
+      <p style="font-size: 13px; margin-top: 8px;" id="dash-bmi-status"></p>
+    </div>
+  </div>
+
+  <!-- ===================== MEALS PAGE ===================== -->
+  <div class="page" id="page-meals">
+    <div class="day-nav">
+      <button class="secondary" id="meals-prev-day" aria-label="Previous day"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+      <div class="date-label" id="meals-date-label">Today</div>
+      <button class="secondary" id="meals-next-day" aria-label="Next day"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Add food</h3>
+      <label for="meal-type">Meal</label>
+      <select id="meal-type">
+        <option value="Breakfast">Breakfast</option>
+        <option value="Lunch">Lunch</option>
+        <option value="Dinner">Dinner</option>
+        <option value="Snacks">Snacks</option>
+      </select>
+      <label for="food-select">Food</label>
+      <div class="row-add">
+        <select id="food-select"></select>
+        <input type="number" id="food-qty" value="1" min="0.1" step="0.1" aria-label="Quantity (servings)">
+        <button id="add-food-btn">Add</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 6px;">Quantity is in servings (see serving size in food name)</p>
+    </div>
+
+    <div id="meals-list"></div>
+
+    <!-- Walk logging -->
+    <div class="card">
+      <h3 style="margin-bottom:8px;">🚶 Today's Walk</h3>
+      <div id="walk-carry-info" style="margin-bottom:8px;"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label for="walk-done-input">Kitni walk ki (minutes)</label>
+          <input type="number" id="walk-done-input" min="0" max="300" placeholder="e.g. 15">
+        </div>
+        <button id="log-walk-btn" style="flex:0 0 auto;width:80px;margin:0;height:38px;">Log</button>
+      </div>
+      <p id="walk-status" style="font-size:13px;color:var(--text-secondary);margin-top:8px;"></p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Day total</h3>
+      <table>
+        <tr><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr>
+        <tr><td id="meals-tot-cal">0</td><td id="meals-tot-carb">0</td><td id="meals-tot-prot">0</td><td id="meals-tot-fat">0</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== WEIGHT PAGE ===================== -->
+  <div class="page" id="page-weight">
+    <h1>Weight log</h1>
+    <p class="subtitle">Log your weight to track progress toward your goal.</p>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Log today's weight</h3>
+      <div class="weight-log-row">
+        <input type="number" id="weight-input" min="20" max="300" step="0.1" placeholder="kg">
+        <button id="log-weight-btn">Save</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">History</h3>
+      <div id="weight-history"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SUMMARY PAGE ===================== -->
+  <div class="page" id="page-summary">
+    <h1>7-day summary</h1>
+    <p class="subtitle">Calories, walk minutes and weight trend for the last 7 days.</p>
+
+    <div class="card">
+      <table id="summary-table"></table>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Averages</h3>
+      <table>
+        <tr><td>Avg calories eaten</td><td id="summary-avg-cal">-</td></tr>
+        <tr><td>Avg target calories</td><td id="summary-avg-target">-</td></tr>
+        <tr><td>Avg walk minutes</td><td id="summary-avg-walk">-</td></tr>
+        <tr><td>Weight change</td><td id="summary-weight-change">-</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== WATER PAGE ===================== -->
+  <div class="page" id="page-water">
+    <h1>Pani tracker 💧</h1>
+    <p class="subtitle">Roz kitna pani pina hai — track karein, remind karein.</p>
+
+    <div class="card">
+      <h3 style="margin-bottom:8px;">⚡ Quick water reminder set karein</h3>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Har X ghante mein pani peene ki yaad dilayein.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="addQuickWaterReminder(2)" style="flex:1;min-width:80px;height:36px;font-size:13px;margin:0;">Har 2 ghante</button>
+        <button onclick="addQuickWaterReminder(3)" style="flex:1;min-width:80px;height:36px;font-size:13px;margin:0;">Har 3 ghante</button>
+        <button onclick="addQuickWaterReminder(4)" style="flex:1;min-width:80px;height:36px;font-size:13px;margin:0;">Har 4 ghante</button>
+      </div>
+      <p id="quick-reminder-status" style="font-size:12px;color:var(--accent);margin-top:8px;display:none;"></p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:8px;">Goal set karein</h3>
+      <label for="water-goal-input">Daily goal (glasses)</label>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <input type="number" id="water-goal-input" min="4" max="20" value="8" style="flex:1;">
+        <button id="save-water-goal-btn" style="flex:0 0 auto;width:80px;margin:0;height:38px;">Save</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-tertiary);margin-top:6px;">1 glass = ~250ml. 8 glasses = 2 litre.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3>Aaj ka pani</h3>
+        <span id="water-count-label" style="font-size:13px;color:var(--text-secondary);"></span>
+      </div>
+      <div class="water-glasses" id="water-glasses-grid"></div>
+      <div class="progress-bar-track" style="margin-top:12px;">
+        <div class="progress-bar-fill" id="water-progress-fill" style="width:0%;background:#0ea5e9;"></div>
+      </div>
+      <p id="water-motivation" style="font-size:13px;color:var(--text-secondary);margin-top:8px;"></p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:8px;">Pichle 7 din</h3>
+      <div id="water-history"></div>
+    </div>
+  </div>
+
+  <!-- ===================== REMINDERS PAGE ===================== -->
+  <div class="page" id="page-reminders">
+    <h1>Reminders 🔔</h1>
+    <p class="subtitle">Alarm set karein — app open ho ya na ho, reminder milta rahega.</p>
+
+    <div class="card" id="notif-permission-card" style="display:none;">
+      <p style="font-size:13px;margin-bottom:8px;">Reminders ke liye notification allow karni hogi.</p>
+      <button id="enable-notif-btn">Allow Notifications</button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:10px;">Naya reminder add karein</h3>
+      <label>Waqt (Time)</label>
+      <div class="alarm-row">
+        <input type="time" id="alarm-time">
+        <select id="alarm-type">
+          <option value="water">💧 Pani piyein</option>
+          <option value="walk">🚶 Walk ka waqt</option>
+          <option value="meal">🍽️ Khana log karein</option>
+          <option value="weight">⚖️ Weight log karein</option>
+          <option value="custom">📝 Custom</option>
+        </select>
+      </div>
+      <div id="alarm-custom-row" style="display:none;margin-bottom:8px;">
+        <label>Custom message</label>
+        <input type="text" id="alarm-custom-msg" placeholder="Apna message likhein">
+      </div>
+      <label>Repeat</label>
+      <select id="alarm-repeat">
+        <option value="daily">Roz (Daily)</option>
+        <option value="weekdays">Weekdays only</option>
+        <option value="once">Sirf ek baar</option>
+      </select>
+      <button id="add-alarm-btn">Reminder Add Karein</button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:8px;">Mere Reminders</h3>
+      <div id="alarms-list"><div class="empty">Koi reminder nahi. Upar se add karein.</div></div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS PAGE ===================== -->
+  <div class="page" id="page-settings">
+    <h1>Settings</h1>
+    <p class="subtitle">Update your profile or reset stored data.</p>
+
+    <div class="card">
+      <label for="s-age">Age (years)</label>
+      <input type="number" id="s-age" min="10" max="100">
+
+      <label for="s-gender">Gender</label>
+      <select id="s-gender">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <label for="s-height">Height (cm)</label>
+      <input type="number" id="s-height" min="100" max="250">
+
+      <label for="s-weight">Current weight (kg)</label>
+      <input type="number" id="s-weight" min="20" max="300" step="0.1">
+
+      <label for="s-goal">Goal</label>
+      <select id="s-goal">
+        <option value="lose">Lose weight</option>
+        <option value="maintain">Maintain</option>
+        <option value="gain">Gain weight</option>
+      </select>
+
+      <label for="s-target-weight">Target weight (kg)</label>
+      <input type="number" id="s-target-weight" min="20" max="300" step="0.1">
+
+      <label for="s-target-date">Target date</label>
+      <input type="date" id="s-target-date">
+
+      <button id="save-settings-btn">Save changes</button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 8px;">Data</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">All data is stored locally in this browser. Clearing it cannot be undone.</p>
+      <button class="secondary" id="reset-data-btn" style="border-color: var(--danger); color: var(--danger);">Reset all data</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== BOTTOM NAV ===================== -->
+<div class="tabs">
+  <div class="tabs-inner">
+    <button class="tab active" data-page="dashboard" aria-label="Dashboard">
+      <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+      <span>Dashboard</span>
+    </button>
+    <button class="tab" data-page="meals" aria-label="Meals">
+      <i class="ti ti-soup" aria-hidden="true"></i>
+      <span>Meals</span>
+    </button>
+    <button class="tab" data-page="water" aria-label="Water">
+      <i class="ti ti-droplet" aria-hidden="true"></i>
+      <span>Pani</span>
+    </button>
+    <button class="tab" data-page="weight" aria-label="Weight">
+      <i class="ti ti-scale" aria-hidden="true"></i>
+      <span>Weight</span>
+    </button>
+    <button class="tab" data-page="reminders" aria-label="Reminders">
+      <i class="ti ti-bell" aria-hidden="true"></i>
+      <span>Alarm</span>
+    </button>
+    <button class="tab" data-page="summary" aria-label="Summary">
+      <i class="ti ti-chart-bar" aria-hidden="true"></i>
+      <span>Summary</span>
+    </button>
+    <button class="tab" data-page="settings" aria-label="Settings">
+      <i class="ti ti-settings" aria-hidden="true"></i>
+      <span>Settings</span>
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/iconfont/tabler-icons.min.css"></script>
+<script>
+/* ============================================================
+   FOOD DATABASE (per serving)
+   ============================================================ */
+const FOOD_DB = [
+  { name: "Roti / chapati (1 medium, ~40g)", cal: 104, carb: 18, prot: 3, fat: 2.5 },
+  { name: "White rice, cooked (1 cup)", cal: 205, carb: 45, prot: 4.3, fat: 0.4 },
+  { name: "Brown rice, cooked (1 cup)", cal: 216, carb: 45, prot: 5, fat: 1.8 },
+  { name: "Biryani (1 cup)", cal: 350, carb: 45, prot: 12, fat: 13 },
+  { name: "Daal / lentils, cooked (1 cup)", cal: 230, carb: 40, prot: 18, fat: 1 },
+  { name: "Chicken curry (1 cup)", cal: 280, carb: 8, prot: 25, fat: 17 },
+  { name: "Chicken breast, grilled (100g)", cal: 165, carb: 0, prot: 31, fat: 3.6 },
+  { name: "Beef curry (1 cup)", cal: 320, carb: 6, prot: 26, fat: 22 },
+  { name: "Egg, boiled (1 large)", cal: 78, carb: 0.6, prot: 6.3, fat: 5.3 },
+  { name: "Paneer (100g)", cal: 265, carb: 3.5, prot: 18, fat: 21 },
+  { name: "Yogurt / dahi, plain (1 cup)", cal: 150, carb: 11, prot: 8, fat: 8 },
+  { name: "Milk, whole (1 cup)", cal: 149, carb: 12, prot: 8, fat: 8 },
+  { name: "Samosa (1 piece)", cal: 260, carb: 24, prot: 4, fat: 17 },
+  { name: "Naan (1 piece)", cal: 262, carb: 45, prot: 9, fat: 5 },
+  { name: "Paratha (1 piece)", cal: 210, carb: 30, prot: 4, fat: 9 },
+  { name: "Apple (medium)", cal: 95, carb: 25, prot: 0.5, fat: 0.3 },
+  { name: "Banana (medium)", cal: 105, carb: 27, prot: 1.3, fat: 0.4 },
+  { name: "Mango (1 cup sliced)", cal: 99, carb: 25, prot: 1.4, fat: 0.6 },
+  { name: "Dates (3 pieces)", cal: 70, carb: 18, prot: 0.6, fat: 0 },
+  { name: "Orange (medium)", cal: 62, carb: 15, prot: 1.2, fat: 0.2 },
+  { name: "Almonds (1 oz / ~23)", cal: 164, carb: 6, prot: 6, fat: 14 },
+  { name: "Peanuts, roasted (1 oz)", cal: 166, carb: 6, prot: 7, fat: 14 },
+  { name: "Chickpeas / chana, cooked (1 cup)", cal: 270, carb: 45, prot: 15, fat: 4 },
+  { name: "Potato curry / aloo (1 cup)", cal: 220, carb: 30, prot: 4, fat: 9 },
+  { name: "Spinach / saag, cooked (1 cup)", cal: 140, carb: 8, prot: 7, fat: 9 },
+  { name: "Vegetable mixed curry (1 cup)", cal: 160, carb: 18, prot: 5, fat: 8 },
+  { name: "Tea with milk and sugar (1 cup)", cal: 60, carb: 8, prot: 1.5, fat: 2.5 },
+  { name: "Sugarcane juice (1 cup)", cal: 180, carb: 45, prot: 0, fat: 0 },
+  { name: "Bread, white (1 slice)", cal: 79, carb: 14, prot: 2.7, fat: 1 },
+  { name: "Pasta, cooked (1 cup)", cal: 220, carb: 43, prot: 8, fat: 1.3 },
+  { name: "Salmon, cooked (100g)", cal: 208, carb: 0, prot: 20, fat: 13 },
+  { name: "Avocado (half)", cal: 120, carb: 6, prot: 1.5, fat: 11 },
+  { name: "Cheddar cheese (1 oz)", cal: 113, carb: 0.4, prot: 7, fat: 9.3 },
+  { name: "Pizza slice, cheese", cal: 285, carb: 36, prot: 12, fat: 10 },
+  { name: "Oats, cooked (1 cup)", cal: 166, carb: 28, prot: 6, fat: 3.6 }
+];
+
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+
+/* ============================================================
+   STORAGE HELPERS
+   ============================================================ */
+const STORAGE_KEY = "nutrition_app_data_v1";
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error("Failed to save data", e);
+  }
+}
+
+let appData = loadData() || {
+  profile: null,
+  days: {}, // dateStr -> { meals: { Breakfast: [...], Lunch: [...], ... }, weight: number|null }
+};
+
+function dateStr(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getDay(ds) {
+  if (!appData.days[ds]) {
+    appData.days[ds] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  }
+  if (!appData.days[ds].meals) {
+    appData.days[ds].meals = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
+  }
+  MEAL_TYPES.forEach(m => { if (!appData.days[ds].meals[m]) appData.days[ds].meals[m] = []; });
+  return appData.days[ds].days || appData.days[ds];
+}
+
+/* ============================================================
+   CALCULATIONS
+   ============================================================ */
+function calcBMI(weightKg, heightCm) {
+  const h = heightCm / 100;
+  return weightKg / (h * h);
+}
+
+function bmiCategory(bmi) {
+  if (bmi < 18.5) return { label: "Underweight", color: "warning" };
+  if (bmi < 25) return { label: "Normal", color: "normal" };
+  if (bmi < 30) return { label: "Overweight", color: "warning" };
+  return { label: "Obese", color: "over" };
+}
+
+function healthyWeightRange(heightCm) {
+  const h = heightCm / 100;
+  const low = 18.5 * h * h;
+  const high = 24.9 * h * h;
+  return { low, high };
+}
+
+// Mifflin-St Jeor BBM + activity factor (assume lightly active 1.4x) then adjust for goal
+function calcCalorieTarget(profile) {
+  const { age, gender, height, weight, goal } = profile;
+  let bmr;
+  if (gender === "male") {
+    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  } else {
+    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+  }
+  const tdee = bmr * 1.4; // lightly active multiplier
+  let target = tdee;
+  if (goal === "lose") target = tdee - 500;
+  if (goal === "gain") target = tdee + 500;
+  // safety floor
+  const floor = gender === "male" ? 1500 : 1200;
+  if (target < floor) target = floor;
+  return Math.round(target);
+}
+
+// Suggest walking minutes based on goal and gap between intake and target
+function calcWalkGoal(profile, totalCalToday, target) {
+  const base = profile.goal === "lose" ? 30 : profile.goal === "maintain" ? 20 : 15;
+  let extra = 0;
+  if (totalCalToday > target * 1.1) {
+    extra = 20;
+  }
+  return base + extra;
+}
+
+/* Navigation handled above */
+/* initApp handled above */
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => showPage(tab.dataset.page));
+});
+
+document.getElementById("save-profile-btn").addEventListener("click", () => {
+  const profile = {
+    age: parseFloat(document.getElementById("p-age").value) || 25,
+    gender: document.getElementById("p-gender").value,
+    height: parseFloat(document.getElementById("p-height").value) || 170,
+    weight: parseFloat(document.getElementById("p-weight").value) || 70,
+    goal: document.getElementById("p-goal").value,
+    targetWeight: parseFloat(document.getElementById("p-target-weight").value) || null,
+    targetDate: document.getElementById("p-target-date").value || null
+  };
+  appData.profile = profile;
+  // log initial weight for today
+  const today = dateStr(new Date());
+  if (!appData.days[today]) appData.days[today] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  appData.days[today].weight = profile.weight;
+  saveData(appData);
+  document.querySelector(".tabs").style.display = "flex";
+  showPage("dashboard");
+});
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function dayTotals(ds) {
+  const day = appData.days[ds];
+  let cal = 0, carb = 0, prot = 0, fat = 0;
+  if (day && day.meals) {
+    MEAL_TYPES.forEach(m => {
+      (day.meals[m] || []).forEach(item => {
+        cal += item.cal * item.qty;
+        carb += item.carb * item.qty;
+        prot += item.prot * item.qty;
+        fat += item.fat * item.qty;
+      });
+    });
+  }
+  return { cal, carb, prot, fat };
+}
+
+function renderDashboard() {
+  const profile = appData.profile;
+  const today = dateStr(new Date());
+  const totals = dayTotals(today);
+  const target = calcCalorieTarget(profile);
+  const remaining = Math.round(target - totals.cal);
+  const walkBase = calcWalkGoal(profile, totals.cal, target);
+  const walkCarry = getWalkCarryOver();
+  const walkGoal = walkBase + walkCarry;
+  const walkDoneToday = getWalkDone(today);
+
+  document.getElementById("dash-date-label").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  document.getElementById("dash-cal-eaten").textContent = Math.round(totals.cal);
+  document.getElementById("dash-cal-target").textContent = target;
+  document.getElementById("dash-cal-remaining").textContent = remaining;
+  document.getElementById("dash-walk-goal").textContent = walkGoal;
+
+  // Dashboard walk carry badge
+  const carryBadgeEl = document.getElementById("dash-carry-badge");
+  if (walkCarry > 0) {
+    carryBadgeEl.innerHTML = `<div class="carry-badge" style="margin-top:4px;font-size:11px;">⏩ +${walkCarry} carry</div>`;
+  } else {
+    carryBadgeEl.innerHTML = "";
+  }
+
+  // Dashboard walk done indicator
+  const dashWalkCard = document.getElementById("dash-walk-goal").closest(".metric-card");
+  let walkStatusLine = dashWalkCard.querySelector(".walk-done-line");
+  if (!walkStatusLine) {
+    walkStatusLine = document.createElement("div");
+    walkStatusLine.className = "walk-done-line";
+    walkStatusLine.style.cssText = "font-size:11px;margin-top:3px;";
+    dashWalkCard.appendChild(walkStatusLine);
+  }
+  if (walkDoneToday !== null) {
+    const rem = walkGoal - walkDoneToday;
+    walkStatusLine.textContent = rem <= 0 ? `✅ ${walkDoneToday} min done!` : `🚶 ${walkDoneToday}/${walkGoal} min`;
+    walkStatusLine.style.color = rem <= 0 ? "var(--accent)" : "var(--warning)";
+  } else {
+    walkStatusLine.textContent = `Goal: ${walkGoal} min`;
+    walkStatusLine.style.color = "var(--text-tertiary)";
+  }
+
+  // macros
+  document.getElementById("dash-carb").textContent = Math.round(totals.carb);
+  document.getElementById("dash-prot").textContent = Math.round(totals.prot);
+  document.getElementById("dash-fat").textContent = Math.round(totals.fat);
+
+  // progress bar
+  const pct = Math.min(150, Math.round((totals.cal / target) * 100));
+  const fill = document.getElementById("dash-progress-fill");
+  fill.style.width = Math.min(100, pct) + "%";
+  fill.style.background = totals.cal > target * 1.1 ? "var(--danger)" : "var(--accent)";
+  document.getElementById("dash-progress-label").textContent = `${Math.round(totals.cal)} of ${target} kcal (${pct}%)`;
+
+  // alert
+  const alertEl = document.getElementById("dash-alert");
+  if (totals.cal > target * 1.1) {
+    alertEl.innerHTML = `<div class="alert warning"><i class="ti ti-alert-triangle" aria-hidden="true" style="font-size:18px;"></i><span>You ate more than your target today. Reduce snacks or add 20-30 minutes of walking.</span></div>`;
+  } else if (totals.cal > 0) {
+    alertEl.innerHTML = `<div class="alert success"><i class="ti ti-check" aria-hidden="true" style="font-size:18px;"></i><span>You're on track with your calorie target today.</span></div>`;
+  } else {
+    alertEl.innerHTML = "";
+  }
+
+  // weight / BMI
+  const currentWeight = getLatestWeight();
+  const bmi = calcBMI(currentWeight, profile.height);
+  const range = healthyWeightRange(profile.height);
+  const cat = bmiCategory(bmi);
+
+  document.getElementById("dash-cur-weight").textContent = currentWeight.toFixed(1) + " kg";
+  document.getElementById("dash-target-weight").textContent = profile.targetWeight ? profile.targetWeight.toFixed(1) + " kg" : "-";
+  document.getElementById("dash-bmi").textContent = bmi.toFixed(1);
+  document.getElementById("dash-healthy-range").textContent = `${range.low.toFixed(1)} - ${range.high.toFixed(1)} kg`;
+
+  let statusHtml = `<span class="badge ${cat.color === 'normal' ? 'normal' : 'over'}">${cat.label}</span>`;
+  if (currentWeight < range.low) {
+    statusHtml += ` <span style="color: var(--text-secondary);">You're below the healthy range for your height.</span>`;
+  } else if (currentWeight > range.high) {
+    statusHtml += ` <span style="color: var(--text-secondary);">You're above the healthy range for your height.</span>`;
+  } else {
+    statusHtml += ` <span style="color: var(--text-secondary);">You're within the healthy range for your height.</span>`;
+  }
+  document.getElementById("dash-bmi-status").innerHTML = statusHtml;
+}
+
+function getLatestWeight() {
+  const dates = Object.keys(appData.days).filter(ds => appData.days[ds].weight != null).sort();
+  if (dates.length === 0) return appData.profile.weight;
+  return appData.days[dates[dates.length - 1]].weight;
+}
+
+/* ============================================================
+   MEALS PAGE
+   ============================================================ */
+let mealsCurrentDate = new Date();
+
+function populateFoodSelect() {
+  const sel = document.getElementById("food-select");
+  sel.innerHTML = "";
+  FOOD_DB.forEach((f, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = f.name;
+    sel.appendChild(opt);
+  });
+}
+populateFoodSelect();
+
+document.getElementById("meals-prev-day").addEventListener("click", () => {
+  mealsCurrentDate.setDate(mealsCurrentDate.getDate() - 1);
+  renderMeals();
+});
+document.getElementById("meals-next-day").addEventListener("click", () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate());
+  const next = new Date(mealsCurrentDate);
+  next.setDate(next.getDate() + 1);
+  // allow navigating up to today
+  if (dateStr(next) <= dateStr(new Date())) {
+    mealsCurrentDate = next;
+    renderMeals();
+  }
+});
+
+document.getElementById("add-food-btn").addEventListener("click", () => {
+  const ds = dateStr(mealsCurrentDate);
+  if (!appData.days[ds]) appData.days[ds] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  if (!appData.days[ds].meals) appData.days[ds].meals = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
+
+  const mealType = document.getElementById("meal-type").value;
+  const foodIdx = parseInt(document.getElementById("food-select").value);
+  const qty = parseFloat(document.getElementById("food-qty").value) || 1;
+  const food = FOOD_DB[foodIdx];
+
+  appData.days[ds].meals[mealType].push({
+    name: food.name, cal: food.cal, carb: food.carb, prot: food.prot, fat: food.fat, qty: qty
+  });
+  saveData(appData);
+  renderMeals();
+});
+
+function removeFood(mealType, idx) {
+  const ds = dateStr(mealsCurrentDate);
+  appData.days[ds].meals[mealType].splice(idx, 1);
+  saveData(appData);
+  renderMeals();
+}
+
+function renderMeals() {
+  const ds = dateStr(mealsCurrentDate);
+  const today = dateStr(new Date());
+  const label = ds === today ? "Today" : mealsCurrentDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  document.getElementById("meals-date-label").textContent = label;
+  document.getElementById("meals-next-day").disabled = ds >= today;
+
+  if (!appData.days[ds]) appData.days[ds] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  if (!appData.days[ds].meals) appData.days[ds].meals = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
+  const day = appData.days[ds];
+
+  const listEl = document.getElementById("meals-list");
+  listEl.innerHTML = "";
+
+  MEAL_TYPES.forEach(mealType => {
+    const items = day.meals[mealType] || [];
+    let mealCal = 0;
+    items.forEach(i => mealCal += i.cal * i.qty);
+
+    const section = document.createElement("div");
+    section.className = "card meal-section";
+    let itemsHtml = "";
+    if (items.length === 0) {
+      itemsHtml = `<div class="empty">No items added</div>`;
+    } else {
+      itemsHtml = items.map((item, idx) => `
+        <div class="food-item">
+          <div class="name">${item.name} <span class="qty">x${item.qty}</span></div>
+          <div class="macros">${Math.round(item.cal * item.qty)} kcal &middot; C${Math.round(item.carb * item.qty)} P${Math.round(item.prot * item.qty)} F${Math.round(item.fat * item.qty)}</div>
+          <button class="remove-btn" aria-label="Remove" onclick="removeFood('${mealType}', ${idx})"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+      `).join("");
+    }
+
+    section.innerHTML = `
+      <div class="meal-header">
+        <span>${mealType}</span>
+        <span class="meal-total">${Math.round(mealCal)} kcal</span>
+      </div>
+      ${itemsHtml}
+    `;
+    listEl.appendChild(section);
+  });
+
+  const totals = dayTotals(ds);
+  document.getElementById("meals-tot-cal").textContent = Math.round(totals.cal);
+  document.getElementById("meals-tot-carb").textContent = Math.round(totals.carb);
+  document.getElementById("meals-tot-prot").textContent = Math.round(totals.prot);
+  document.getElementById("meals-tot-fat").textContent = Math.round(totals.fat);
+}
+
+/* ============================================================
+   WEIGHT PAGE
+   ============================================================ */
+document.getElementById("log-weight-btn").addEventListener("click", () => {
+  const val = parseFloat(document.getElementById("weight-input").value);
+  if (!val || val <= 0) return;
+  const ds = dateStr(new Date());
+  if (!appData.days[ds]) appData.days[ds] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  appData.days[ds].weight = val;
+  saveData(appData);
+  document.getElementById("weight-input").value = "";
+  renderWeight();
+});
+
+function renderWeight() {
+  const histEl = document.getElementById("weight-history");
+  const entries = Object.keys(appData.days)
+    .filter(ds => appData.days[ds].weight != null)
+    .sort((a, b) => b.localeCompare(a))
+    .slice(0, 14);
+
+  if (entries.length === 0) {
+    histEl.innerHTML = `<div class="empty">No weight logged yet</div>`;
+    return;
+  }
+
+  histEl.innerHTML = entries.map(ds => {
+    const d = new Date(ds + "T00:00:00");
+    const label = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    return `
+      <div class="food-item">
+        <div class="name">${label}</div>
+        <div class="macros">${appData.days[ds].weight.toFixed(1)} kg</div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ============================================================
+   SUMMARY PAGE (last 7 days)
+   ============================================================ */
+function renderSummary() {
+  const profile = appData.profile;
+  const target = calcCalorieTarget(profile);
+  const tableEl = document.getElementById("summary-table");
+
+  const rows = [];
+  let sumCal = 0, sumTarget = 0, sumWalk = 0, count = 0;
+  let firstWeight = null, lastWeight = null;
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = dateStr(d);
+    const totals = dayTotals(ds);
+    const walkGoalForDay = calcWalkGoal(profile, totals.cal, target);
+    const walkDoneForDay = (appData.days[ds] && appData.days[ds].walkDone != null) ? appData.days[ds].walkDone : null;
+    const weight = appData.days[ds] ? appData.days[ds].weight : null;
+
+    if (weight != null) {
+      if (firstWeight == null) firstWeight = weight;
+      lastWeight = weight;
+    }
+
+    sumCal += totals.cal;
+    sumTarget += target;
+    sumWalk += walkDoneForDay !== null ? walkDoneForDay : 0;
+    count++;
+
+    rows.push({
+      label: d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
+      cal: Math.round(totals.cal),
+      target: target,
+      walk: walkDoneForDay !== null ? `${walkDoneForDay}/${walkGoalForDay}` : `–/${walkGoalForDay}`,
+      weight: weight != null ? weight.toFixed(1) : "-"
+    });
+  }
+
+  let html = `<tr><th>Day</th><th>Eaten</th><th>Target</th><th>Walk</th><th>Weight</th></tr>`;
+  rows.forEach(r => {
+    html += `<tr><td>${r.label}</td><td>${r.cal}</td><td>${r.target}</td><td>${r.walk}</td><td>${r.weight}</td></tr>`;
+  });
+  tableEl.innerHTML = html;
+
+  document.getElementById("summary-avg-cal").textContent = Math.round(sumCal / count) + " kcal";
+  document.getElementById("summary-avg-target").textContent = Math.round(sumTarget / count) + " kcal";
+  document.getElementById("summary-avg-walk").textContent = Math.round(sumWalk / count) + " min done";
+
+  if (firstWeight != null && lastWeight != null) {
+    const change = lastWeight - firstWeight;
+    const sign = change > 0 ? "+" : "";
+    document.getElementById("summary-weight-change").textContent = `${sign}${change.toFixed(1)} kg`;
+  } else {
+    document.getElementById("summary-weight-change").textContent = "Not enough data";
+  }
+}
+
+/* ============================================================
+   SETTINGS PAGE
+   ============================================================ */
+function renderSettingsForm() {
+  const p = appData.profile;
+  document.getElementById("s-age").value = p.age;
+  document.getElementById("s-gender").value = p.gender;
+  document.getElementById("s-height").value = p.height;
+  document.getElementById("s-weight").value = p.weight;
+  document.getElementById("s-goal").value = p.goal;
+  document.getElementById("s-target-weight").value = p.targetWeight || "";
+  document.getElementById("s-target-date").value = p.targetDate || "";
+}
+
+document.getElementById("save-settings-btn").addEventListener("click", () => {
+  appData.profile = {
+    age: parseFloat(document.getElementById("s-age").value) || 25,
+    gender: document.getElementById("s-gender").value,
+    height: parseFloat(document.getElementById("s-height").value) || 170,
+    weight: parseFloat(document.getElementById("s-weight").value) || 70,
+    goal: document.getElementById("s-goal").value,
+    targetWeight: parseFloat(document.getElementById("s-target-weight").value) || null,
+    targetDate: document.getElementById("s-target-date").value || null
+  };
+  saveData(appData);
+  showPage("dashboard");
+});
+
+document.getElementById("reset-data-btn").addEventListener("click", () => {
+  if (confirm("This will permanently delete all your data. Continue?")) {
+    localStorage.removeItem(STORAGE_KEY);
+    appData = { profile: null, days: {} };
+    initApp();
+  }
+});
+
+/* ============================================================
+   WALK CARRY-OVER
+   ============================================================ */
+function getWalkDone(ds) {
+  return (appData.days[ds] && appData.days[ds].walkDone != null) ? appData.days[ds].walkDone : null;
+}
+
+function getWalkCarryOver() {
+  // Sum up unpaid deficit from past 7 days
+  let carry = 0;
+  for (let i = 7; i >= 1; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = dateStr(d);
+    const totals = dayTotals(ds);
+    const target = calcCalorieTarget(appData.profile);
+    const goal = calcWalkGoal(appData.profile, totals.cal, target);
+    const done = getWalkDone(ds);
+    if (done !== null && done < goal) {
+      carry += (goal - done);
+    }
+  }
+  return carry;
+}
+
+document.getElementById("log-walk-btn").addEventListener("click", () => {
+  const ds = dateStr(mealsCurrentDate);
+  const val = parseFloat(document.getElementById("walk-done-input").value);
+  if (isNaN(val) || val < 0) return;
+  if (!appData.days[ds]) appData.days[ds] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  appData.days[ds].walkDone = val;
+  saveData(appData);
+  document.getElementById("walk-done-input").value = "";
+  renderWalkSection();
+  renderDashboard();
+});
+
+function renderWalkSection() {
+  const ds = dateStr(mealsCurrentDate);
+  const totals = dayTotals(ds);
+  const target = calcCalorieTarget(appData.profile);
+  const base = calcWalkGoal(appData.profile, totals.cal, target);
+  const carry = getWalkCarryOver();
+  const totalGoal = base + carry;
+  const done = getWalkDone(ds);
+  const today = dateStr(new Date());
+  const isToday = ds === today;
+
+  const carryEl = document.getElementById("walk-carry-info");
+  if (carry > 0) {
+    carryEl.innerHTML = `<div class="carry-badge">⏩ Kal se ${carry} min carry forward hain — aaj ka total: ${totalGoal} min</div>`;
+  } else {
+    carryEl.innerHTML = "";
+  }
+
+  const statusEl = document.getElementById("walk-status");
+  if (done !== null) {
+    const remaining = totalGoal - done;
+    if (remaining <= 0) {
+      statusEl.innerHTML = `✅ Mubarak! Aaj ki ${done} min walk mukammal — goal poora ho gaya.`;
+      statusEl.style.color = "var(--accent)";
+    } else {
+      statusEl.innerHTML = `🚶 ${done} min ki — abhi ${remaining} min baaki hain (aaj ka goal: ${totalGoal} min)`;
+      statusEl.style.color = "var(--warning)";
+    }
+  } else if (isToday) {
+    statusEl.innerHTML = `Goal: ${totalGoal} min${carry > 0 ? ` (base ${base} + ${carry} carry forward)` : ""}. Opar log karein.`;
+    statusEl.style.color = "var(--text-secondary)";
+  } else {
+    statusEl.innerHTML = done !== null ? `${done} min logged.` : "Is din ki walk log nahi ki.";
+    statusEl.style.color = "var(--text-tertiary)";
+  }
+}
+
+/* ============================================================
+   WATER TRACKER
+   ============================================================ */
+function getWaterGoal() {
+  return appData.waterGoal || 8;
+}
+
+function getWaterToday() {
+  const ds = dateStr(new Date());
+  return (appData.days[ds] && appData.days[ds].water != null) ? appData.days[ds].water : 0;
+}
+
+function setWaterToday(glasses) {
+  const ds = dateStr(new Date());
+  if (!appData.days[ds]) appData.days[ds] = { meals: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] }, weight: null };
+  appData.days[ds].water = glasses;
+  saveData(appData);
+}
+
+function renderWaterGlasses(containerId, glasses, goal, interactive) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  let html = "";
+  for (let i = 1; i <= goal; i++) {
+    const filled = i <= glasses;
+    html += `<button class="glass-btn ${filled ? "filled" : ""}" ${interactive ? `onclick="toggleGlass(${i})"` : ""} title="${i} glass">${filled ? "💧" : "🫙"}</button>`;
+  }
+  el.innerHTML = html;
+}
+
+function toggleGlass(idx) {
+  const goal = getWaterGoal();
+  const current = getWaterToday();
+  // If clicking a filled glass that is the last filled → unfill it
+  // If clicking unfilled → fill up to that glass
+  const newVal = idx === current ? idx - 1 : idx;
+  setWaterToday(Math.max(0, newVal));
+  renderWaterPage();
+  renderDashboardWater();
+}
+
+function renderDashboardWater() {
+  const goal = getWaterGoal();
+  const glasses = getWaterToday();
+  renderWaterGlasses("dash-water-glasses", glasses, goal, true);
+  document.getElementById("dash-water-label").textContent = `${glasses}/${goal} glasses`;
+}
+
+function renderWaterPage() {
+  const goal = getWaterGoal();
+  const glasses = getWaterToday();
+  document.getElementById("water-goal-input").value = goal;
+  renderWaterGlasses("water-glasses-grid", glasses, goal, true);
+  document.getElementById("water-count-label").textContent = `${glasses} / ${goal} glasses (${glasses * 250}ml / ${goal * 250}ml)`;
+  const pct = Math.min(100, Math.round((glasses / goal) * 100));
+  document.getElementById("water-progress-fill").style.width = pct + "%";
+  const motivations = [
+    "Shuru karein — pehla glass piyein! 💧",
+    "Acha shuru! Thoda aur piyein 😊",
+    "Aadha goal! Bahut acha 👍",
+    "Zyada hone wala hai — almost there! 💪",
+    "Goal mukammal! Pani piney ki adat ban gayi 🎉"
+  ];
+  const idx = glasses === 0 ? 0 : glasses < goal * 0.3 ? 1 : glasses < goal * 0.6 ? 2 : glasses < goal ? 3 : 4;
+  document.getElementById("water-motivation").textContent = motivations[idx];
+
+  // 7-day history
+  const histEl = document.getElementById("water-history");
+  let hHtml = "";
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = dateStr(d);
+    const w = (appData.days[ds] && appData.days[ds].water != null) ? appData.days[ds].water : 0;
+    const label = i === 0 ? "Aaj" : d.toLocaleDateString("ur-PK", { weekday: "short", day: "numeric" });
+    const pct2 = Math.min(100, Math.round((w / goal) * 100));
+    hHtml += `<div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:3px;">
+        <span>${label}</span><span>${w}/${goal}</span>
+      </div>
+      <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct2}%;background:#0ea5e9;"></div></div>
+    </div>`;
+  }
+  histEl.innerHTML = hHtml || `<div class="empty">Koi data nahi</div>`;
+}
+
+document.getElementById("save-water-goal-btn").addEventListener("click", () => {
+  const val = parseInt(document.getElementById("water-goal-input").value) || 8;
+  appData.waterGoal = Math.max(4, Math.min(20, val));
+  saveData(appData);
+  renderWaterPage();
+  renderDashboardWater();
+});
+
+function addQuickWaterReminder(intervalHours) {
+  const alarms = getAlarms();
+  const now = new Date();
+  let added = 0;
+  // Add reminders from 8am to 10pm at the given interval
+  for (let h = 8; h <= 22; h += intervalHours) {
+    const hh = String(Math.floor(h)).padStart(2, "0");
+    const mm = "00";
+    const timeStr = `${hh}:${mm}`;
+    // Avoid duplicates
+    if (!alarms.find(a => a.time === timeStr && a.type === "water")) {
+      alarms.push({ id: Date.now() + h, time: timeStr, type: "water", repeat: "daily", customMsg: "", active: true, lastFired: null });
+      added++;
+    }
+  }
+  saveAlarms(alarms);
+  const statusEl = document.getElementById("quick-reminder-status");
+  statusEl.textContent = `✅ ${added} water reminders add ho gaye! "Alarm" tab mein dekh saktey hain.`;
+  statusEl.style.display = "block";
+  if (alarms.some(a => a.active)) startAlarmChecker();
+  setTimeout(() => { statusEl.style.display = "none"; }, 4000);
+}
+
+/* ============================================================
+   REMINDERS / ALARMS
+   ============================================================ */
+let alarmInterval = null;
+
+function getAlarms() { return appData.alarms || []; }
+function saveAlarms(alarms) { appData.alarms = alarms; saveData(appData); }
+
+const ALARM_LABELS = {
+  water: "💧 Pani piyein",
+  walk: "🚶 Walk ka waqt",
+  meal: "🍽️ Khana log karein",
+  weight: "⚖️ Weight log karein",
+  custom: "📝 Custom"
+};
+
+document.getElementById("alarm-type").addEventListener("change", function() {
+  document.getElementById("alarm-custom-row").style.display = this.value === "custom" ? "block" : "none";
+});
+
+document.getElementById("add-alarm-btn").addEventListener("click", () => {
+  const time = document.getElementById("alarm-time").value;
+  if (!time) { alert("Waqt zaroor likhen!"); return; }
+  const type = document.getElementById("alarm-type").value;
+  const repeat = document.getElementById("alarm-repeat").value;
+  const customMsg = document.getElementById("alarm-custom-msg").value;
+  const alarms = getAlarms();
+  alarms.push({
+    id: Date.now(),
+    time, type, repeat,
+    customMsg: type === "custom" ? customMsg : "",
+    active: true,
+    lastFired: null
+  });
+  saveAlarms(alarms);
+  document.getElementById("alarm-time").value = "";
+  document.getElementById("alarm-custom-msg").value = "";
+  renderAlarms();
+  startAlarmChecker();
+});
+
+function renderAlarms() {
+  const alarms = getAlarms();
+  const el = document.getElementById("alarms-list");
+  if (alarms.length === 0) {
+    el.innerHTML = `<div class="empty">Koi reminder nahi. Upar se add karein.</div>`;
+    return;
+  }
+  el.innerHTML = alarms.map((a, idx) => {
+    const label = a.type === "custom" && a.customMsg ? a.customMsg : ALARM_LABELS[a.type] || a.type;
+    const repeatLabel = a.repeat === "daily" ? "Roz" : a.repeat === "weekdays" ? "Weekdays" : "Ek baar";
+    return `<div class="alarm-item">
+      <div>
+        <span class="alarm-dot ${a.active ? "" : "off"}"></span>
+        <strong>${a.time}</strong>
+        <span style="color:var(--text-secondary);margin-left:6px;">${label}</span>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;margin-left:14px;">${repeatLabel}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="alarm-toggle ${a.active ? "on" : ""}" onclick="toggleAlarm(${idx})" title="Toggle"></button>
+        <button class="remove-btn" onclick="deleteAlarm(${idx})" title="Delete"><i class="ti ti-trash" style="font-size:16px;color:var(--danger);"></i></button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function toggleAlarm(idx) {
+  const alarms = getAlarms();
+  alarms[idx].active = !alarms[idx].active;
+  saveAlarms(alarms);
+  renderAlarms();
+  if (alarms.some(a => a.active)) startAlarmChecker(); else stopAlarmChecker();
+}
+
+function deleteAlarm(idx) {
+  const alarms = getAlarms();
+  alarms.splice(idx, 1);
+  saveAlarms(alarms);
+  renderAlarms();
+}
+
+function playAlarmSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beep = (freq, start, dur) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    };
+    beep(880, 0, 0.15);
+    beep(1100, 0.2, 0.15);
+    beep(880, 0.4, 0.3);
+  } catch(e) {}
+}
+
+function fireAlarm(alarm) {
+  const msg = alarm.type === "custom" && alarm.customMsg ? alarm.customMsg : ALARM_LABELS[alarm.type];
+  // Play beep sound
+  playAlarmSound();
+  // Web Notification
+  if (Notification.permission === "granted") {
+    new Notification("NutriTrack ⏰", {
+      body: msg,
+      icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%230f6e56'/%3E%3Ctext x='32' y='42' font-size='30' text-anchor='middle'%3E🥗%3C/text%3E%3C/svg%3E"
+    });
+  }
+  // In-app bell animation
+  document.querySelectorAll(".tab[data-page='reminders'] i").forEach(i => {
+    i.classList.add("bell-ring");
+    setTimeout(() => i.classList.remove("bell-ring"), 700);
+  });
+  // Mark last fired
+  alarm.lastFired = new Date().toISOString();
+}
+
+function startAlarmChecker() {
+  if (alarmInterval) return;
+  alarmInterval = setInterval(checkAlarms, 30000); // check every 30s
+  checkAlarms();
+}
+
+function stopAlarmChecker() {
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+}
+
+function checkAlarms() {
+  const alarms = getAlarms();
+  if (!alarms.length) return;
+  const now = new Date();
+  const nowHH = String(now.getHours()).padStart(2, "0");
+  const nowMM = String(now.getMinutes()).padStart(2, "0");
+  const nowTime = `${nowHH}:${nowMM}`;
+  const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
+  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+  let changed = false;
+
+  alarms.forEach((alarm, i) => {
+    if (!alarm.active) return;
+    if (alarm.time !== nowTime) return;
+    // Check repeat
+    if (alarm.repeat === "weekdays" && !isWeekday) return;
+    // Check if already fired this minute
+    if (alarm.lastFired) {
+      const lf = new Date(alarm.lastFired);
+      if (lf.getFullYear() === now.getFullYear() && lf.getMonth() === now.getMonth() &&
+          lf.getDate() === now.getDate() && lf.getHours() === now.getHours() && lf.getMinutes() === now.getMinutes()) return;
+    }
+    fireAlarm(alarm);
+    alarm.lastFired = now.toISOString();
+    if (alarm.repeat === "once") alarm.active = false;
+    changed = true;
+  });
+
+  if (changed) { saveAlarms(alarms); renderAlarms(); }
+}
+
+// Notification permission check
+function checkNotifPermission() {
+  const card = document.getElementById("notif-permission-card");
+  if (!("Notification" in window)) { if (card) card.innerHTML = "<p style='font-size:13px;color:var(--text-secondary);'>Yeh browser notifications support nahi karta.</p>"; return; }
+  if (Notification.permission === "default") { if (card) card.style.display = "block"; }
+  else { if (card) card.style.display = "none"; }
+}
+
+document.getElementById("enable-notif-btn").addEventListener("click", () => {
+  Notification.requestPermission().then(p => {
+    checkNotifPermission();
+    if (p === "granted") startAlarmChecker();
+  });
+});
+
+/* ============================================================
+   PWA – Install Prompt
+   ============================================================ */
+let deferredInstallPrompt = null;
+
+// Inject manifest dynamically
+(function() {
+  const manifest = {
+    name: "NutriTrack",
+    short_name: "NutriTrack",
+    description: "Nutrition, walk & water tracker",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#f5f4f0",
+    theme_color: "#0f6e56",
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%230f6e56'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E🥗%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230f6e56'/%3E%3Ctext x='256' y='360' font-size='280' text-anchor='middle'%3E🥗%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  document.getElementById("pwa-manifest").href = url;
+})();
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const banner = document.getElementById("install-banner");
+  banner.style.display = "flex";
+  document.getElementById("main-container").style.paddingTop = "52px";
+});
+
+document.getElementById("install-btn").addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const result = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById("install-banner").style.display = "none";
+  document.getElementById("main-container").style.paddingTop = "";
+});
+
+document.getElementById("close-banner-btn").addEventListener("click", () => {
+  document.getElementById("install-banner").style.display = "none";
+  document.getElementById("main-container").style.paddingTop = "";
+});
+
+/* ============================================================
+   NAVIGATION (updated)
+   ============================================================ */
+function showPage(pageId) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  const target = document.getElementById("page-" + pageId);
+  if (target) target.classList.add("active");
+  const tab = document.querySelector(`.tab[data-page="${pageId}"]`);
+  if (tab) tab.classList.add("active");
+
+  if (pageId === "dashboard") renderDashboard();
+  if (pageId === "meals") { renderMeals(); renderWalkSection(); }
+  if (pageId === "water") renderWaterPage();
+  if (pageId === "weight") renderWeight();
+  if (pageId === "summary") renderSummary();
+  if (pageId === "settings") renderSettingsForm();
+  if (pageId === "reminders") { renderAlarms(); checkNotifPermission(); }
+}
+
+/* ============================================================
+   INIT (updated)
+   ============================================================ */
+function initApp() {
+  if (!appData.profile) {
+    document.querySelector(".tabs").style.display = "none";
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById("page-profile").classList.add("active");
+  } else {
+    document.querySelector(".tabs").style.display = "flex";
+    showPage("dashboard");
+    if (getAlarms().some(a => a.active)) startAlarmChecker();
+  }
+}
+
+initApp();
+</script>
+</body>
+</html>
